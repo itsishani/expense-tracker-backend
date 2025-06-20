@@ -1,0 +1,7 @@
+com/example/expensetracker/model/Expense.class
+com/example/expensetracker/controller/ExpenseController.class
+com/example/expensetracker/controller/AuthController.class
+com/example/expensetracker/model/User.class
+com/example/expensetracker/ExpenseTrackerApplication.class
+com/example/expensetracker/repository/ExpenseRepository.class
+com/example/expensetracker/repository/UserRepository.class

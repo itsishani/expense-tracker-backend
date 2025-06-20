@@ -1,0 +1,7 @@
+/home/ishani/Desktop/project/expense-tracker-backend/src/main/java/com/example/expensetracker/controller/ExpenseController.java
+/home/ishani/Desktop/project/expense-tracker-backend/src/main/java/com/example/expensetracker/controller/AuthController.java
+/home/ishani/Desktop/project/expense-tracker-backend/src/main/java/com/example/expensetracker/model/User.java
+/home/ishani/Desktop/project/expense-tracker-backend/src/main/java/com/example/expensetracker/model/Expense.java
+/home/ishani/Desktop/project/expense-tracker-backend/src/main/java/com/example/expensetracker/ExpenseTrackerApplication.java
+/home/ishani/Desktop/project/expense-tracker-backend/src/main/java/com/example/expensetracker/repository/ExpenseRepository.java
+/home/ishani/Desktop/project/expense-tracker-backend/src/main/java/com/example/expensetracker/repository/UserRepository.java
