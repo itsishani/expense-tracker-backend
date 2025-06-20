@@ -15,7 +15,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/itsishani/expense-tracker-backend.git', branch: 'main'
+                git url: 'https://github.com/itsishani/expense-tracker-backend.git', branch: 'master'
             }
         }
 
