@@ -34,3 +34,11 @@ jobs:
     - name: 🧪 Run unit tests
       run: mvn test
 
+    - name: 🐳 Build Docker image
+      run: docker build -t expense-tracker-app:${{ github.sha }} .
+
+
+    - name: ⬆️ Push image
+      run: |
+        docker tag expense-tracker-app:${{ github.sha }} yourhub/expense-tracker-app:${{ github.sha }}
+        docker push yourhub/expense-tracker-app:${{ github.sha }}
