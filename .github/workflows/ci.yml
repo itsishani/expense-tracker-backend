@@ -31,3 +31,6 @@ jobs:
 
     - name: 🐳 (Optional) Build Docker image
       run: docker build -t expense-tracker-app .
+    - name: 🧪 Run unit tests
+      run: mvn test
+
