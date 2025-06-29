@@ -14,71 +14,43 @@ permissions:
 
 jobs:
   build-test-package:
-    runs-on: ubuntu-latest
+      runs-on: ubuntu-latest
 
-    steps:
-    # ────────────────────────────────
-    # 1. Checkout the code
-    # ────────────────────────────────
-    - name: 📥 Checkout code
-      uses: actions/checkout@v4
+      steps:
+      - uses: actions/checkout@v4
 
-    # ────────────────────────────────
-    # 2. Set up the JDK
-    # ────────────────────────────────
-    - name: ☕ Set up Temurin JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: 17
-
-    # ────────────────────────────────
-    # 3. Build & test with Maven
-    # ────────────────────────────────
-    - name: ⚙️ Maven – build & test
-      run: |
-        mvn --batch-mode -DskipTests=false clean verify
-
-    # ────────────────────────────────
-    # 4. Build the Docker image
-    # ────────────────────────────────
-    - name: 🐳 Build Docker image
-      run: |
-        IMAGE_NAME=expense-tracker-app
-        IMAGE_TAG=${{ github.sha }}
-        docker build -t $IMAGE_NAME:$IMAGE_TAG .
-
-    # ────────────────────────────────
-    # 5. Log in to a registry
-    #    • choose ONE of the blocks
-    # ────────────────────────────────
-
-    # ----- (A) GitHub Container Registry -----
-    - name: 🔐 Log in to GHCR
-      if: always()  # remove if you use Docker Hub instead
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | \
-           docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-    # ----- (B) Docker Hub -----
-    # - name: 🔐 Log in to Docker Hub
-    #   env:
-    #     DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-    #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-    #   run: echo "$DOCKERHUB_TOKEN" | \
-    #        docker login -u "$DOCKERHUB_USER" --password-stdin
-
-    # ────────────────────────────────
-    # 6. Tag & push
-    # ────────────────────────────────
-    - name: 🚀 Push image
-      env:
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        # ↳ Choose target registry / namespace
-        # --- GHCR target -------------------------------------------------
-        TARGET=ghcr.io/${{ github.repository_owner }}/expense-tracker-app:$IMAGE_TAG
-        # --- Docker Hub target ------------------------------------------
-        # TARGET=${{ secrets.DOCKERHUB_USERNAME }}/expense-tracker-app:$IMAGE_TAG
-
-        docker tag expense-tracker-app:$IMAGE_TAG $TARGET
-        docker push $TARGET
+      - name: ☕ Set up Temurin JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+  
+      - name: ⚙️ Maven – build & test
+        run: mvn --batch-mode verify    # runs unit tests too
+  
+      # ───────── Docker build & push via actions ─────────
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+  
+      - name: 🔐 Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+  
+      # (For Docker Hub instead)
+      # - name: 🔐 Log in to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+  
+      - name: 🐳 Build & push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # ----- target registry / tag -------------
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/expense-tracker-app:${{ github.sha }}
