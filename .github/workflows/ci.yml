@@ -1,44 +1,84 @@
 name: CI Pipeline
 
+# 👉 Triggers ─ run on every push or PR to master
 on:
   push:
-    branches: [ "master" ]
+    branches: [master]
   pull_request:
-    branches: [ "master" ]
+    branches: [master]
+
+# 👉 Allow the built‑in GITHUB_TOKEN to push images (needed for GHCR)
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build:
+  build-test-package:
     runs-on: ubuntu-latest
 
     steps:
+    # ────────────────────────────────
+    # 1. Checkout the code
+    # ────────────────────────────────
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: ☕ Set up Java 17
-      uses: actions/setup-java@v3
+    # ────────────────────────────────
+    # 2. Set up the JDK
+    # ────────────────────────────────
+    - name: ☕ Set up Temurin JDK 17
+      uses: actions/setup-java@v4
       with:
-        java-version: '17'
-        distribution: 'temurin'
+        distribution: temurin
+        java-version: 17
 
-    - name: ⚙️ Build with Maven
-      run: mvn clean install -DskipTests
-
-    - name: 🧪 Run Tests
-      run: mvn test
-
-    - name: 📦 Package the app
-      run: mvn package -DskipTests
-
-    - name: 🐳 (Optional) Build Docker image
-      run: docker build -t expense-tracker-app .
-    - name: 🧪 Run unit tests
-      run: mvn test
-
-    - name: 🐳 Build Docker image
-      run: docker build -t expense-tracker-app:${{ github.sha }} .
-
-
-    - name: ⬆️ Push image
+    # ────────────────────────────────
+    # 3. Build & test with Maven
+    # ────────────────────────────────
+    - name: ⚙️ Maven – build & test
       run: |
-        docker tag expense-tracker-app:${{ github.sha }} yourhub/expense-tracker-app:${{ github.sha }}
-        docker push yourhub/expense-tracker-app:${{ github.sha }}
+        mvn --batch-mode -DskipTests=false clean verify
+
+    # ────────────────────────────────
+    # 4. Build the Docker image
+    # ────────────────────────────────
+    - name: 🐳 Build Docker image
+      run: |
+        IMAGE_NAME=expense-tracker-app
+        IMAGE_TAG=${{ github.sha }}
+        docker build -t $IMAGE_NAME:$IMAGE_TAG .
+
+    # ────────────────────────────────
+    # 5. Log in to a registry
+    #    • choose ONE of the blocks
+    # ────────────────────────────────
+
+    # ----- (A) GitHub Container Registry -----
+    - name: 🔐 Log in to GHCR
+      if: always()  # remove if you use Docker Hub instead
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | \
+           docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+    # ----- (B) Docker Hub -----
+    # - name: 🔐 Log in to Docker Hub
+    #   env:
+    #     DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+    #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    #   run: echo "$DOCKERHUB_TOKEN" | \
+    #        docker login -u "$DOCKERHUB_USER" --password-stdin
+
+    # ────────────────────────────────
+    # 6. Tag & push
+    # ────────────────────────────────
+    - name: 🚀 Push image
+      env:
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # ↳ Choose target registry / namespace
+        # --- GHCR target -------------------------------------------------
+        TARGET=ghcr.io/${{ github.repository_owner }}/expense-tracker-app:$IMAGE_TAG
+        # --- Docker Hub target ------------------------------------------
+        # TARGET=${{ secrets.DOCKERHUB_USERNAME }}/expense-tracker-app:$IMAGE_TAG
+
+        docker tag expense-tracker-app:$IMAGE_TAG $TARGET
+        docker push $TARGET
