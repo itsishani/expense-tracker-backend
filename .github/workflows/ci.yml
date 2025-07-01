@@ -54,3 +54,11 @@ jobs:
           # ----- target registry / tag -------------
           tags: |
             ghcr.io/${{ github.repository_owner }}/expense-tracker-app:${{ github.sha }}
+      - name: Run Unit Tests with Maven
+        run: mvn test
+
+      - name: Publish JUnit Test Results
+        uses : actions/upload-artifact@v3
+        with:
+            name: junit-test-results
+            path: target/surefire-reports/
