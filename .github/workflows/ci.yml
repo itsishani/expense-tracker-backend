@@ -58,7 +58,7 @@ jobs:
         run: mvn test
 
       - name: Publish JUnit Test Results
-        uses : actions/upload-artifact@v3
+        uses : actions/upload-artifact@v4
         with:
             name: junit-test-results
             path: target/surefire-reports/
